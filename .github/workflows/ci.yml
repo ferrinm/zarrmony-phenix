@@ -22,10 +22,8 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Create virtual env
-        run: uv venv
-
-      # pyphenix is not yet on PyPI; install from git so the resolver finds it.
+      # setup-uv already provisioned a .venv; install into it.
+      # pyphenix is not yet on PyPI, so pull from git.
       - name: Install pyphenix from git
         run: uv pip install "git+https://github.com/ferrinm/pyphenix@v0.3.3"
 
