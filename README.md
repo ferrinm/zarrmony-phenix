@@ -10,16 +10,7 @@ that `zarrmony convert /path/to/PhenixExperiment` Just Works.
 pip install zarrmony-phenix
 ```
 
-`pyphenix` is not yet on PyPI; until it is, install from git:
-
-```bash
-pip install "git+https://github.com/ferrinm/pyphenix@v0.3.3"
-pip install zarrmony-phenix
-```
-
-If you use [uv](https://docs.astral.sh/uv/), the bundled `[tool.uv.sources]`
-block in `pyproject.toml` resolves `pyphenix` automatically — `uv sync` is
-enough.
+This pulls `zarrmony` and `pyphenix` from PyPI as transitive dependencies.
 
 ## Verify the plugin registered
 
