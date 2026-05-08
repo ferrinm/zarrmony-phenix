@@ -23,9 +23,11 @@ jobs:
           python-version: "3.13"
 
       # setup-uv already provisioned a .venv; install into it.
-      # pyphenix is not yet on PyPI, so pull from git.
-      - name: Install pyphenix from git
-        run: uv pip install "git+https://github.com/ferrinm/pyphenix@v0.3.3"
+      # zarrmony 0.2.0 and pyphenix are not yet on PyPI, so pull from git.
+      - name: Install zarrmony and pyphenix from git
+        run: |
+          uv pip install "git+https://github.com/ferrinm/zarrmony@v0.2.0"
+          uv pip install "git+https://github.com/ferrinm/pyphenix@v0.3.3"
 
       - name: Install zarrmony-phenix and dev tools
         run: uv pip install -e ".[dev]"
