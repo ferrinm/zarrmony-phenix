@@ -22,18 +22,21 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Create virtual env
+        run: uv venv
+
       # pyphenix is not yet on PyPI; install from git so the resolver finds it.
       - name: Install pyphenix from git
-        run: uv pip install --system "git+https://github.com/ferrinm/pyphenix@v0.3.3"
+        run: uv pip install "git+https://github.com/ferrinm/pyphenix@v0.3.3"
 
       - name: Install zarrmony-phenix and dev tools
-        run: uv pip install --system -e ".[dev]"
+        run: uv pip install -e ".[dev]"
 
       - name: Lint
-        run: uv run ruff check
+        run: .venv/bin/ruff check
 
       - name: Format check
-        run: uv run ruff format --check
+        run: .venv/bin/ruff format --check
 
       - name: Test
-        run: uv run pytest
+        run: .venv/bin/pytest
