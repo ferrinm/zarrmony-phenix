@@ -21,6 +21,7 @@ phenix = "zarrmony_phenix:plugin"
 [project.optional-dependencies]
 dev = [
     "pytest>=8",
+    "pytest-cov>=7",
     "ruff>=0.14",
     "tifffile>=2024.0",
 ]
