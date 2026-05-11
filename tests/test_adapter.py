@@ -16,9 +16,9 @@ def test_layout_hint_is_plate(synthetic_phenix_dir: Path) -> None:
     assert r.layout_hint == "plate"
 
 
-def test_scenes_encode_plate_coords(synthetic_phenix_dir: Path) -> None:
+def test_scenes_are_vendor_native_field_labels(synthetic_phenix_dir: Path) -> None:
     r = PhenixReader(synthetic_phenix_dir)
-    assert r.scenes == ["B04-f01"]
+    assert r.scenes == ["F001"]
 
 
 def test_xarray_dims_dtype_shape(synthetic_phenix_dir: Path) -> None:
@@ -68,7 +68,7 @@ def test_zarrmony_inspect_finds_phenix_plugin(synthetic_phenix_dir: Path) -> Non
         assert info["reader_plugin"]["name"] == "zarrmony-phenix"
         assert info["reader_plugin"]["distribution"] == "zarrmony-phenix"
         assert info["n_scenes"] == 1
-        assert info["scenes"][0]["name"] == "B04-f01"
+        assert info["scenes"][0]["name"] == "F001"
     finally:
         plugin_mod._PLUGINS.clear()
         plugin_mod._PLUGINS.update(snap_plugins)
