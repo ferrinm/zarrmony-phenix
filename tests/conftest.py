@@ -47,9 +47,7 @@ def _image_url(row: int, col: int, field: int) -> str:
     return f"r{row:02d}c{col:02d}f{field:02d}p01-ch1.tiff"
 
 
-def _image_xml(
-    row: int, col: int, field: int, acquisition_id: str | None
-) -> str:
+def _image_xml(row: int, col: int, field: int, acquisition_id: str | None) -> str:
     aid_line = (
         f"      <AcquisitionID>{acquisition_id}</AcquisitionID>\n"
         if acquisition_id is not None
@@ -123,9 +121,7 @@ def write_synthetic_phenix(
         "  <Maps>\n"
         f"{_CHANNEL_ENTRY}\n"
         "  </Maps>\n"
-        "  <Images>\n"
-        + "\n".join(image_blocks)
-        + "\n  </Images>\n"
+        "  <Images>\n" + "\n".join(image_blocks) + "\n  </Images>\n"
         "</EvaluationInputData>\n"
     )
     (images_dir / "Index.xml").write_text(xml, encoding="utf-8")

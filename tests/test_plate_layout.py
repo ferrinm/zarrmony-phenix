@@ -166,9 +166,7 @@ def test_field_name_format_matches_phenix_convention(
 
 def test_acquisitions_id_matches_every_plate_field(synthetic_phenix_dir: Path) -> None:
     r = PhenixReader(synthetic_phenix_dir)
-    assert r.plate_layout.acquisitions == [
-        Acquisition(id=1, name="SYNTHETIC-PLATE-0001")
-    ]
+    assert r.plate_layout.acquisitions == [Acquisition(id=1, name="SYNTHETIC-PLATE-0001")]
     acq_ids = {a.id for a in r.plate_layout.acquisitions}
     for pf in r.plate_layout.fields:
         assert pf.acquisition_id in acq_ids
@@ -226,9 +224,7 @@ def test_acquisition_scan_parse_failure_falls_back_silently(
             raise ET.ParseError("simulated scan failure")
         return real_parse(source, *args, **kwargs)
 
-    monkeypatch.setattr(
-        "zarrmony_phenix.adapter.ET.parse", flaky_parse, raising=True
-    )
+    monkeypatch.setattr("zarrmony_phenix.adapter.ET.parse", flaky_parse, raising=True)
     # Flip the flag once OperaPhenixReader has finished parsing.
     from pyphenix import OperaPhenixReader
 
@@ -258,9 +254,7 @@ def _read_zarr_attrs(group_path: Path) -> dict:
     return json.loads((group_path / "zarr.json").read_text())["attributes"]
 
 
-def test_convert_plate_writes_ome_ngff_plate_store(
-    tmp_path: Path, registered_plugin
-) -> None:
+def test_convert_plate_writes_ome_ngff_plate_store(tmp_path: Path, registered_plugin) -> None:
     from zarrmony.api import convert
 
     root = tmp_path / "experiment"

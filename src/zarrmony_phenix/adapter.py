@@ -89,9 +89,7 @@ class PhenixReader:
                 stacklevel=2,
             )
             first = acquisition_ids[0]
-            scene_keys = [
-                k for k in scene_keys if self._scene_acquisition_id(k) == first
-            ]
+            scene_keys = [k for k in scene_keys if self._scene_acquisition_id(k) == first]
 
         self._scene_keys: list[tuple[int, int, int]] = scene_keys
         self.scenes: list[str] = [_field_name(field) for (_r, _c, field) in scene_keys]
