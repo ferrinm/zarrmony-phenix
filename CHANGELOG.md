@@ -12,6 +12,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `PhenixReader.scenes` now contains vendor-native field labels (`F001`,
   `F002`, ...) instead of the v0.1.0 `<row-letter><col>-f<field>` encoding
   (`B04-f02`). Plate coordinates live on the new `plate_layout` attribute.
+  Code that keys `--per-scene-metadata` (or any other lookup) by the old
+  scene-name format must be re-keyed to the new `F\d{3}` shape.
 
 ### Added
 
