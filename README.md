@@ -74,6 +74,14 @@ Detection is by the presence of either marker; both are scored equally.
   is detected in `Index.xml`, the adapter emits a `LayoutDowngradeWarning`
   and exports only the first acquisition's fields. Pass
   `--layout per-scene` to capture every acquisition as its own store.
+- **napari shows only one field per well at the plate level.** This is an
+  upstream limitation in `napari-ome-zarr`, not a writer bug — all fields
+  are present on disk and visible in the
+  [ome-ngff validator](https://ome.github.io/ome-ngff-validator/). To
+  inspect individual fields in napari, open the per-well image group
+  directly (e.g. `path/to/plate.ome.zarr/B/04/0`) instead of the plate
+  root. Tracked upstream at
+  [ome/napari-ome-zarr#61](https://github.com/ome/napari-ome-zarr/issues/61).
 
 ## Why a separate package?
 
