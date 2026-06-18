@@ -276,6 +276,51 @@ def test_convert_plate_writes_ome_ngff_plate_store(tmp_path: Path, registered_pl
     assert (out / "C" / "05").is_dir()
 
 
+def test_convert_plate_writes_every_field_per_well(
+    tmp_path: Path, registered_plugin
+) -> None:
+    """Regression test for #7: each well group must carry one image per imaged
+    field, not silently drop or overwrite fields beyond the first.
+
+    Asserts, for every ``(row, column)`` the reader's ``plate_layout`` produces:
+    (1) the well group's ``ome.well.images`` list length matches the expected
+    field count, (2) the listed image paths match the writer's per-well
+    sequence convention, and (3) every listed image group exists on disk.
+    """
+    from zarrmony.api import convert
+
+    root = tmp_path / "experiment"
+    write_synthetic_phenix(
+        root,
+        wells=[(2, 4), (3, 5)],
+        fields_per_well={(2, 4): [1, 2, 3], (3, 5): [1, 2]},
+    )
+    out = tmp_path / "out.ome.zarr"
+    convert(str(root), str(out), layout="plate", permissive=True)
+
+    expected_by_well: dict[tuple[str, str], list] = {}
+    for pf in PhenixReader(root).plate_layout.fields:
+        expected_by_well.setdefault((pf.row, pf.column), []).append(pf)
+    # Sanity check: fixture really exercises >1 field across >1 well.
+    assert sorted(expected_by_well) == [("B", "04"), ("C", "05")]
+    assert [len(v) for _, v in sorted(expected_by_well.items())] == [3, 2]
+
+    for (row, column), fields in expected_by_well.items():
+        well_dir = out / row / column
+        well_attrs = _read_zarr_attrs(well_dir)
+        images = well_attrs["ome"]["well"]["images"]
+        expected_paths = [str(i) for i in range(len(fields))]
+        assert [img["path"] for img in images] == expected_paths, (
+            f"well {row}/{column}: expected images {expected_paths}, "
+            f"got {[img['path'] for img in images]}"
+        )
+        for path in expected_paths:
+            image_dir = well_dir / path
+            assert image_dir.is_dir(), (
+                f"missing image group for well {row}/{column} field path {path!r}"
+            )
+
+
 def test_per_scene_fallback_disambiguates_duplicate_field_labels(
     tmp_path: Path, registered_plugin
 ) -> None:
