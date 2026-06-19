@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] — 2026-06-18
+
+### Changed (BREAKING)
+
+- Flat-field correction is now auto-applied whenever the Phenix export ships
+  per-channel FFC profiles (`FFC_Profile/*.xml` or
+  `flatfieldcorrection/*.xml`). The converted OME-NGFF store dtype switches
+  to `float32` in that case; FFC-less acquisitions remain `uint16`. The
+  per-channel illumination tile is divided into each chunk via
+  `dask.array.map_blocks`, so streaming into Zarr stays chunk-by-chunk
+  (no whole-stack eager load). There is no on/off toggle — the presence
+  of profiles in the export is itself the signal. See
+  [`docs/adr/0001-always-on-float32-ffc.md`](docs/adr/0001-always-on-float32-ffc.md)
+  for the design rationale and escape hatch.
+
+### Changed
+
+- Bumped `pyphenix>=0.5.0` (the chunk-friendly FFC primitives ship there:
+  `ffc_correction_images()` plus `FFCCoverageWarning` for partial coverage).
+- Partial FFC coverage (some channels covered, some not) surfaces pyphenix's
+  `FFCCoverageWarning`; conversion continues for both covered and
+  passthrough channels.
+
 ## [0.2.0] — 2026-05-11
 
 ### Changed (BREAKING)

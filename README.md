@@ -65,10 +65,17 @@ Detection is by the presence of either marker; both are scored equally.
 
 ## Limitations
 
-- **Flat-field correction is disabled.** zarrmony streams data into Zarr
-  chunk-by-chunk and pyphenix's FFC pipeline requires loading whole stacks
-  eagerly. If you need FFC-corrected output, run pyphenix's own loader and
-  feed the corrected NumPy arrays into a custom writer.
+- **Flat-field correction is always-on and switches the output dtype to
+  `float32`.** When the Phenix export ships per-channel FFC profiles
+  (`FFC_Profile/*.xml` or `flatfieldcorrection/*.xml`), the adapter divides
+  each chunk by the corresponding illumination tile via
+  `dask.array.map_blocks` and writes `float32` arrays. Acquisitions with no
+  profiles keep their native `uint16`. There is no on/off toggle — the
+  presence of profiles in the export is itself the signal (see
+  [`docs/adr/0001-always-on-float32-ffc.md`](docs/adr/0001-always-on-float32-ffc.md)).
+  Partial coverage is surfaced as `pyphenix.FFCCoverageWarning` and does not
+  block conversion. To get raw `uint16` or an FFC-free pipeline, instantiate
+  `pyphenix.OperaPhenixReader` directly and write the output yourself.
 - **Multi-acquisition Phenix experiments degrade gracefully.** Zarrmony's
   v1 plate writer is single-acquisition; if more than one `AcquisitionID`
   is detected in `Index.xml`, the adapter emits a `LayoutDowngradeWarning`

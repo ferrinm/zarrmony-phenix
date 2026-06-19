@@ -6,9 +6,13 @@ names are vendor-native (``F001``, ``F002``, ...); plate coordinates live on
 ``plate_layout``, not the scene name. Per-scene fallback relies on zarrmony's
 ``resolve_scene_dirnames`` to disambiguate duplicate field labels.
 
-Lazy loading is forced on (``apply_ffc=False``) because flat-field correction
-is incompatible with pyphenix's lazy mode and zarrmony streams data into Zarr
-chunk-by-chunk; loading the full plate eagerly would defeat the point.
+Flat-field correction is auto-applied when the Phenix export ships per-channel
+profiles. The per-channel illumination tile is fetched once via
+``OperaPhenixReader.ffc_correction_images()`` and divided into each chunk via
+``dask.array.map_blocks``, so streaming into Zarr stays chunk-by-chunk. Output
+dtype switches to ``float32`` whenever any profile is present (see
+``docs/adr/0001-always-on-float32-ffc.md``); FFC-less acquisitions keep their
+native ``uint16``.
 """
 
 from __future__ import annotations
@@ -19,6 +23,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import dask.array as da
+import numpy as np
 import xarray as xr
 from pyphenix import OperaPhenixReader
 from zarrmony.errors import LayoutDowngradeWarning
@@ -65,6 +70,26 @@ def _distinct_acquisition_ids(index_xml_path: Path) -> list[str]:
                     seen.append(aid)
                 break
     return seen
+
+
+def _apply_ffc_chunk(
+    chunk: np.ndarray,
+    *,
+    channel_ids: tuple[int, ...],
+    tiles: dict[int, np.ndarray],
+) -> np.ndarray:
+    """Divide each channel plane in ``chunk`` by its illumination tile.
+
+    ``chunk`` is a ``(T, C, Z, Y, X)`` slice with the full C axis. Channels
+    without a real profile pass through (still cast to float32 for output
+    uniformity — see ADR-0001).
+    """
+    out = chunk.astype(np.float32, copy=True)
+    for c_idx, ch_id in enumerate(channel_ids):
+        tile = tiles.get(ch_id)
+        if tile is not None:
+            out[:, c_idx, :, :, :] /= tile
+    return out
 
 
 class PhenixReader:
@@ -115,6 +140,13 @@ class PhenixReader:
         )
         self._active = 0
 
+        # Per-channel illumination tiles, evaluated once and reused across
+        # every chunk. Empty dict when the export ships no FFC profiles (or
+        # only Identity ones) — in which case we leave the dtype at uint16.
+        # pyphenix emits ``FFCCoverageWarning`` here on partial coverage; we
+        # let it propagate (see ADR-0001).
+        self._ffc_tiles: dict[int, np.ndarray] = self._reader.ffc_correction_images()
+
     def _scene_acquisition_id(self, key: tuple[int, int, int]) -> str | None:
         """Look up the AcquisitionID of any image at ``(row, col, field)``.
 
@@ -157,6 +189,13 @@ class PhenixReader:
         )
         h, w = md.image_size
         darr = da.from_array(lazy, chunks=(1, 1, 1, h, w))
+        if self._ffc_tiles:
+            darr = darr.map_blocks(
+                _apply_ffc_chunk,
+                channel_ids=tuple(md.channel_ids),
+                tiles=self._ffc_tiles,
+                dtype=np.float32,
+            )
         coords = {"C": self.channel_names} if self.channel_names else None
         return xr.DataArray(darr, dims=("T", "C", "Z", "Y", "X"), coords=coords)
 

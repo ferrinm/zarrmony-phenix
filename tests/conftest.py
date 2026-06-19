@@ -71,6 +71,38 @@ def _image_xml(row: int, col: int, field: int, acquisition_id: str | None) -> st
     )
 
 
+def _ffc_xml(profiles: Mapping[int, float | None]) -> str:
+    """Build an ``FFC_Profile`` XML payload pyphenix's parser will accept.
+
+    Each entry is a uniform-polynomial profile of value ``coeff`` (so the
+    generated illumination tile is ``coeff`` everywhere). Passing ``None`` for
+    a channel writes an Identity profile (``has_correction() == False``),
+    which pyphenix filters out of ``ffc_correction_images()``.
+    """
+    entries: list[str] = []
+    for ch_id, coeff in profiles.items():
+        if coeff is None:
+            body = "{Background: {Character: Null, Mean: 1.0, Profile: {Type: Identity}}}"
+        else:
+            body = (
+                "{Background: {Character: NonFlat, Mean: 1.0, "
+                "Profile: {Type: Polynomial, "
+                f"Coefficients: [[{coeff}]], "
+                "Dims: [10, 10], Origin: [5.0, 5.0], Scale: [1.0, 1.0]}}}"
+            )
+        entries.append(
+            f'    <Entry ChannelID="{ch_id}">\n'
+            f"      <FlatfieldProfile>{body}</FlatfieldProfile>\n"
+            "    </Entry>"
+        )
+    return (
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        f'<FFCRoot xmlns="{NS}">\n'
+        "  <Map>\n" + "\n".join(entries) + "\n  </Map>\n"
+        "</FFCRoot>\n"
+    )
+
+
 def write_synthetic_phenix(
     root: Path,
     *,
@@ -81,6 +113,7 @@ def write_synthetic_phenix(
     fields_per_well: Mapping[tuple[int, int], Iterable[int]] | None = None,
     acquisition_ids: Mapping[tuple[int, int, int], str] | None = None,
     index_xml_override: str | None = None,
+    ffc_profiles: Mapping[int, float | None] | None = None,
 ) -> Path:
     """Write a minimal Phenix experiment tree under ``root``.
 
@@ -125,6 +158,12 @@ def write_synthetic_phenix(
         "</EvaluationInputData>\n"
     )
     (images_dir / "Index.xml").write_text(xml, encoding="utf-8")
+
+    if ffc_profiles is not None:
+        ffc_dir = root / "FFC_Profile"
+        ffc_dir.mkdir(parents=True, exist_ok=True)
+        (ffc_dir / "FFC_Profile_synthetic.xml").write_text(_ffc_xml(ffc_profiles), encoding="utf-8")
+
     return root
 
 
