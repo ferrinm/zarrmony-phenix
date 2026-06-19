@@ -276,9 +276,7 @@ def test_convert_plate_writes_ome_ngff_plate_store(tmp_path: Path, registered_pl
     assert (out / "C" / "05").is_dir()
 
 
-def test_convert_plate_writes_every_field_per_well(
-    tmp_path: Path, registered_plugin
-) -> None:
+def test_convert_plate_writes_every_field_per_well(tmp_path: Path, registered_plugin) -> None:
     """Regression test for #7: each well group must carry one image per imaged
     field, not silently drop or overwrite fields beyond the first.
 
