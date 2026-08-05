@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] — 2026-08-05
+
+### Added
+
+- `PhenixReader.acquisition_audit` — soft-optional hook (zarrmony issue #76)
+  returning `{"imaging_method": ["spinning_disk_confocal"], "microscope":
+  "PerkinElmer Opera Phenix"}`. Fills the acquisition-block fields
+  pyphenix's OME projection doesn't surface. Opera Phenix is a Nipkow
+  spinning-disk confocal HCS system by construction, so the contribution
+  is static rather than per-field extracted; both values land on every
+  field end-to-end.
+- Related follow-up tickets: #8 (populate `date` from Index.idx.xml's
+  `MeasurementStartTime`), #9 (per-scene inspect() perf), #10 (remove
+  stale `permissive=True` kwarg from `test_plate_layout`).
+
+### Changed
+
+- Bumped `zarrmony>=0.11.0` — earlier zarrmony versions don't read
+  `acquisition_audit` and would silently ignore the hook.
+
 ## [0.3.0] — 2026-06-18
 
 ### Changed (BREAKING)
