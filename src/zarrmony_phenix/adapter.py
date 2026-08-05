@@ -217,3 +217,21 @@ class PhenixReader:
     @property
     def metadata(self) -> str:
         return Path(self._reader.index_xml_path).read_text(encoding="utf-8")
+
+    @property
+    def acquisition_audit(self) -> dict:
+        """Zarrmony soft-optional hook (zarrmony issue #76): inject
+        acquisition-block fields the Phenix ``Index.xml`` doesn't project into
+        the OME surface bioio/pyphenix exposes.
+
+        Opera Phenix is a Nipkow spinning-disk confocal HCS system by
+        construction — every Phenix Index.idx.xml the reader accepts was
+        produced by that platform, so ``imaging_method`` is a static
+        contribution rather than a per-field extraction. Zarrmony merges with
+        ``setdefault`` semantics — any key populated by pyphenix's OME
+        projection wins over this dict.
+        """
+        return {
+            "imaging_method": ["spinning_disk_confocal"],
+            "microscope": "PerkinElmer Opera Phenix",
+        }
