@@ -29,3 +29,6 @@ htmlcov/
 .idea/
 *.swp
 .DS_Store
+
+# Site-specific sanitize patterns (never committed)
+.internal-patterns
